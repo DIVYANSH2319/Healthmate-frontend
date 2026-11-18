@@ -5,41 +5,52 @@ import { useAuth } from "../AuthContext.jsx";
 
 export default function Dashboard() {
   const { user, lang } = useAuth();
-
   const hi = lang === "hi";
 
   const words = {
-    welcome: hi ? "वापसी पर स्वागत है" : "Welcome back",
+    greeting: hi ? "नमस्ते" : "Hello",
+    welcome: hi ? "आपका स्वास्थ्य, हमारी प्राथमिकता!" : "Your Health, Our Priority!",
+    subtitle: hi
+      ? "हर दिन एक नई शुरुआत है। स्वस्थ रहें, खुश रहें और मुस्कुराते रहें।"
+      : "Every day is a fresh start. Stay healthy, stay happy and keep smiling.",
 
-    chatTitle: hi ? "AI स्वास्थ्य सहायक" : "AI Health Assistant",
-    chatDescription: hi
-      ? "अपने स्वास्थ्य से जुड़े सवाल पूछें।"
-      : "Ask questions about your health.",
+    wellness: hi ? "आपका वेलनेस स्पेस" : "YOUR WELLNESS SPACE",
 
-    reportTitle: hi ? "स्वास्थ्य रिपोर्ट" : "Health Reports",
-    reportDescription: hi
-      ? "अपनी स्वास्थ्य रिपोर्ट देखें।"
-      : "View your health reports.",
+    chat: hi ? "AI स्वास्थ्य सहायक" : "AI Health Assistant",
+    chatDesc: hi
+      ? "अपने स्वास्थ्य से जुड़े सवाल पूछें और जानकारी पाएं।"
+      : "Ask health questions and get helpful information.",
 
-    remindersTitle: hi ? "रिमाइंडर" : "Reminders",
-    reminderDescription: hi
-      ? "अपनी दवाओं और स्वास्थ्य के लिए रिमाइंडर सेट करें।"
-      : "Set reminders for medicines and health.",
+    report: hi ? "स्वास्थ्य रिपोर्ट" : "Health Reports",
+    reportDesc: hi
+      ? "अपने स्वास्थ्य रिकॉर्ड एक जगह देखें।"
+      : "Keep track of your health records in one place.",
 
+    reminder: hi ? "मेडिसिन रिमाइंडर" : "Medicine Reminders",
+    reminderDesc: hi
+      ? "अपने रिमाइंडर व्यवस्थित रखें।"
+      : "Keep your health reminders organized.",
+
+    quick: hi ? "स्वास्थ्य मापदंड जोड़ें" : "Add Health Measurements",
     weight: hi ? "वजन (kg)" : "Weight (kg)",
-    bloodSugar: hi ? "ब्लड शुगर (mg/dL)" : "Blood Sugar (mg/dL)",
-    systolicBP: hi ? "सिस्टोलिक BP" : "Systolic BP",
-    diastolicBP: hi ? "डायस्टोलिक BP" : "Diastolic BP",
-    heartRate: hi ? "हार्ट रेट (bpm)" : "Heart Rate (bpm)",
+    sugar: hi ? "ब्लड शुगर (mg/dL)" : "Blood Sugar (mg/dL)",
+    systolic: hi ? "सिस्टोलिक BP" : "Systolic BP",
+    diastolic: hi ? "डायस्टोलिक BP" : "Diastolic BP",
+    heart: hi ? "हार्ट रेट (bpm)" : "Heart Rate (bpm)",
 
     value: hi ? "मान दर्ज करें" : "Enter value",
-    save: hi ? "सेव करें" : "Save",
-    healthRecords: hi ? "आपके स्वास्थ्य रिकॉर्ड" : "Your Health Records",
+    save: hi ? "रिकॉर्ड सेव करें" : "Save Record",
+
+    records: hi ? "आपके स्वास्थ्य रिकॉर्ड" : "Your Health Records",
     date: hi ? "तारीख" : "Date",
     type: hi ? "प्रकार" : "Type",
     noRecords: hi
-      ? "अभी कोई स्वास्थ्य रिकॉर्ड उपलब्ध नहीं है।"
-      : "No health records available yet."
+      ? "अभी कोई रिकॉर्ड उपलब्ध नहीं है।"
+      : "No records available yet.",
+
+    footer: hi
+      ? "छोटे-छोटे कदम, बेहतर स्वास्थ्य की ओर!"
+      : "Small steps lead to a healthier you!"
   };
 
   const [items, setItems] = useState([]);
@@ -49,10 +60,23 @@ export default function Dashboard() {
     value: ""
   });
 
-  const load = () => {
-    api.get("/measurements").then((r) => {
-      setItems(r.data);
-    });
+  const [loading, setLoading] = useState(false);
+
+  const types = [
+    ["Weight (kg)", words.weight],
+    ["Blood Sugar (mg/dL)", words.sugar],
+    ["Systolic BP", words.systolic],
+    ["Diastolic BP", words.diastolic],
+    ["Heart Rate (bpm)", words.heart]
+  ];
+
+  const load = async () => {
+    try {
+      const response = await api.get("/measurements");
+      setItems(response.data);
+    } catch (error) {
+      console.error("Unable to load measurements:", error);
+    }
   };
 
   useEffect(() => {
@@ -61,145 +85,266 @@ export default function Dashboard() {
 
   const add = async (e) => {
     e.preventDefault();
+    setLoading(true);
 
-    await api.post("/measurements", {
-      type: form.type,
-      value: Number(form.value)
-    });
+    try {
+      await api.post("/measurements", {
+        type: form.type,
+        value: Number(form.value)
+      });
 
-    setForm({
-      ...form,
-      value: ""
-    });
+      setForm({
+        ...form,
+        value: ""
+      });
 
-    load();
+      await load();
+    } catch (error) {
+      alert(
+        hi
+          ? "रिकॉर्ड सेव नहीं हो पाया। दोबारा कोशिश करें।"
+          : "Unable to save record. Please try again."
+      );
+    } finally {
+      setLoading(false);
+    }
   };
-
-  const types = [
-    ["Weight (kg)", "weight"],
-    ["Blood Sugar (mg/dL)", "bloodSugar"],
-    ["Systolic BP", "systolicBP"],
-    ["Diastolic BP", "diastolicBP"],
-    ["Heart Rate (bpm)", "heartRate"]
-  ];
 
   const translateType = (type) => {
     const found = types.find(([value]) => value === type);
-
-    return found ? words[found[1]] : type;
+    return found ? found[1] : type;
   };
 
   return (
-    <div className="dashboard">
+    <div className="hm-dashboard">
 
-      {/* Welcome Heading */}
-      <h2>
-        {words.welcome}, {user?.name} 👋
-      </h2>
+      {/* HERO SECTION */}
+      <section className="hm-hero">
 
-      {/* Dashboard Cards */}
-      <div className="grid">
+        <div className="hm-hero-content">
 
-        <Link className="card tile" to="/chat">
-          <span>🤖</span>
-          <b>{words.chatTitle}</b>
-          <span>{words.chatDescription}</span>
+          <span className="hm-eyebrow">
+            🌿 {words.wellness}
+          </span>
+
+          <h1>
+            {words.greeting}, {user?.name || "Friend"}!
+            <br />
+            <span>{words.welcome}</span>
+          </h1>
+
+          <p>{words.subtitle}</p>
+
+          <div className="hm-hero-badge">
+            💚 {words.footer}
+          </div>
+
+        </div>
+
+        <div className="hm-hero-art">
+          <div className="hm-floating-icon hm-float-one">🌿</div>
+          <div className="hm-floating-icon hm-float-two">✨</div>
+          <div className="hm-hero-emoji">🌱</div>
+          <div className="hm-hero-caption">
+            {hi ? "स्वस्थ जीवन, खुशहाल जीवन" : "Healthy Life, Happy Life"}
+          </div>
+        </div>
+
+      </section>
+
+      {/* FEATURE CARDS */}
+      <section className="hm-features">
+
+        <Link to="/chat" className="hm-feature-card hm-chat-card">
+
+          <div className="hm-card-art hm-robot">
+            🤖
+            <span className="hm-art-sparkle">✨</span>
+          </div>
+
+          <div>
+            <span className="hm-card-label">
+              {hi ? "स्मार्ट सहायक" : "SMART ASSISTANT"}
+            </span>
+
+            <h3>{words.chat}</h3>
+            <p>{words.chatDesc}</p>
+
+            <span className="hm-card-link">
+              {hi ? "चैट शुरू करें →" : "Start Chat →"}
+            </span>
+          </div>
+
         </Link>
 
-        <Link className="card tile" to="/reports">
-          <span>📄</span>
-          <b>{words.reportTitle}</b>
-          <span>{words.reportDescription}</span>
+        <Link to="/reports" className="hm-feature-card hm-report-card">
+
+          <div className="hm-card-art hm-report-art">
+            📋
+            <span className="hm-art-pill">💊</span>
+          </div>
+
+          <div>
+            <span className="hm-card-label">
+              {hi ? "स्वास्थ्य जानकारी" : "HEALTH INSIGHTS"}
+            </span>
+
+            <h3>{words.report}</h3>
+            <p>{words.reportDesc}</p>
+
+            <span className="hm-card-link">
+              {hi ? "रिपोर्ट देखें →" : "View Reports →"}
+            </span>
+          </div>
+
         </Link>
 
-        <Link className="card tile" to="/reminders">
-          <span>⏰</span>
-          <b>{words.remindersTitle}</b>
-          <span>{words.reminderDescription}</span>
+        <Link to="/reminders" className="hm-feature-card hm-reminder-card">
+
+          <div className="hm-card-art hm-medicine-art">
+            💊
+            <span className="hm-art-sparkle">✚</span>
+          </div>
+
+          <div>
+            <span className="hm-card-label">
+              {hi ? "दैनिक स्वास्थ्य" : "DAILY WELLNESS"}
+            </span>
+
+            <h3>{words.reminder}</h3>
+            <p>{words.reminderDesc}</p>
+
+            <span className="hm-card-link">
+              {hi ? "रिमाइंडर देखें →" : "View Reminders →"}
+            </span>
+          </div>
+
         </Link>
 
-      </div>
+      </section>
 
-      {/* Add Health Measurement */}
-      <form className="card row" onSubmit={add}>
+      {/* MEASUREMENT SECTION */}
+      <section className="hm-section">
 
-        <select
-          value={form.type}
-          onChange={(e) =>
-            setForm({
-              ...form,
-              type: e.target.value
-            })
-          }
-        >
-          {types.map(([value, key]) => (
-            <option key={value} value={value}>
-              {words[key]}
-            </option>
-          ))}
-        </select>
+        <div className="hm-section-heading">
+          <div>
+            <span className="hm-section-tag">
+              📊 {hi ? "ट्रैक योर हेल्थ" : "TRACK YOUR HEALTH"}
+            </span>
 
-        <input
-          type="number"
-          step="any"
-          placeholder={words.value}
-          value={form.value}
-          onChange={(e) =>
-            setForm({
-              ...form,
-              value: e.target.value
-            })
-          }
-          required
-        />
+            <h2>{words.quick}</h2>
+          </div>
 
-        <button type="submit">
-          {words.save}
-        </button>
+          <span className="hm-heading-icon">💚</span>
+        </div>
 
-      </form>
+        <form className="hm-measure-form" onSubmit={add}>
 
-      {/* Health Records */}
-      <div className="card">
-
-        <h3>{words.healthRecords}</h3>
-
-        <table>
-          <thead>
-            <tr>
-              <th>{words.date}</th>
-              <th>{words.type}</th>
-              <th>{words.value}</th>
-            </tr>
-          </thead>
-
-          <tbody>
-            {items.map((m) => (
-              <tr key={m.id}>
-
-                <td>
-                  {new Date(m.createdAt).toLocaleString(
-                    hi ? "hi-IN" : "en-IN"
-                  )}
-                </td>
-
-                <td>
-                  {translateType(m.type)}
-                </td>
-
-                <td>{m.value}</td>
-
-              </tr>
+          <select
+            value={form.type}
+            onChange={(e) =>
+              setForm({
+                ...form,
+                type: e.target.value
+              })
+            }
+          >
+            {types.map(([value, label]) => (
+              <option key={value} value={value}>
+                {label}
+              </option>
             ))}
-          </tbody>
-        </table>
+          </select>
 
-        {items.length === 0 && (
-          <p className="muted">
-            {words.noRecords}
-          </p>
+          <input
+            type="number"
+            step="any"
+            placeholder={words.value}
+            value={form.value}
+            onChange={(e) =>
+              setForm({
+                ...form,
+                value: e.target.value
+              })
+            }
+            required
+          />
+
+          <button type="submit" disabled={loading}>
+            {loading ? "..." : `＋ ${words.save}`}
+          </button>
+
+        </form>
+
+      </section>
+
+      {/* HEALTH RECORDS */}
+      <section className="hm-records">
+
+        <div className="hm-section-heading">
+          <div>
+            <span className="hm-section-tag">
+              📁 {hi ? "आपका डेटा" : "YOUR DATA"}
+            </span>
+
+            <h2>{words.records}</h2>
+          </div>
+
+          <span className="hm-record-count">
+            {items.length} {hi ? "रिकॉर्ड" : "Records"}
+          </span>
+        </div>
+
+        {items.length > 0 ? (
+
+          <div className="hm-table-wrapper">
+
+            <table className="hm-table">
+
+              <thead>
+                <tr>
+                  <th>{words.date}</th>
+                  <th>{words.type}</th>
+                  <th>{words.value}</th>
+                </tr>
+              </thead>
+
+              <tbody>
+                {items.map((m) => (
+                  <tr key={m.id}>
+                    <td>
+                      {new Date(m.createdAt).toLocaleString(
+                        hi ? "hi-IN" : "en-IN"
+                      )}
+                    </td>
+
+                    <td>{translateType(m.type)}</td>
+
+                    <td className="hm-value">
+                      {m.value}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+
+            </table>
+
+          </div>
+
+        ) : (
+
+          <div className="hm-empty">
+            <span>🌷</span>
+            <p>{words.noRecords}</p>
+          </div>
+
         )}
 
+      </section>
+
+      {/* FOOTER MESSAGE */}
+      <div className="hm-dashboard-footer">
+        🌿 {words.footer} 💚
       </div>
 
     </div>
