@@ -62,8 +62,4 @@ export default function Reports() {
       )}
     </div>
   );
-}  report.js
-
-    </div>
-  );
 }
